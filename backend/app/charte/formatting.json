@@ -1,0 +1,52 @@
+{
+  "font": {
+    "name": "Times New Roman",
+    "size": 12
+  },
+  "paragraph": {
+    "align": "justify",
+    "line_spacing": 1.5
+  },
+  "margins": {
+    "top": 2.5,
+    "bottom": 2.5,
+    "left": 2.5,
+    "right": 2.5
+  },
+  "headings": {
+    "h1": {
+      "size": 14,
+      "bold": true,
+      "align": "center",
+      "upper": true,
+      "space_before": 12,
+      "space_after": 6
+    },
+    "h2": {
+      "size": 13,
+      "bold": true,
+      "align": "left",
+      "space_before": 10,
+      "space_after": 4
+    },
+    "h3": {
+      "size": 12,
+      "bold": true,
+      "align": "left",
+      "space_before": 8,
+      "space_after": 4
+    }
+  },
+  "pagination": {
+    "cover": null,
+    "pre": "roman",
+    "body": "arabic",
+    "annexes": "roman_upper",
+    "position": "right",
+    "bottom": true
+  },
+  "lists": {
+    "table_title_above": true,
+    "figure_title_below": true
+  }
+}

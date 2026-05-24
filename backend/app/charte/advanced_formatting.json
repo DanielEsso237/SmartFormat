@@ -1,0 +1,38 @@
+{
+  "captions": {
+    "auto_generate": true,
+    "style": "Caption",
+    "numbering": {
+      "figures": "arabic_continuous",
+      "tables": "arabic_continuous"
+    },
+    "fallback": {
+      "figure": "Figure {N}",
+      "table": "Tableau {N}"
+    },
+    "generic_titles": [
+      "introduction", "conclusion", "résumé", "resume",
+      "abstract", "annexe", "annexes", "references",
+      "bibliographie", "références"
+    ],
+    "position": {
+      "figure": "below",
+      "table": "above"
+    }
+  },
+  "images": {
+    "max_width_cm": 14,
+    "max_height_cm": 18,
+    "alignment": "center",
+    "preserve_ratio": true
+  },
+  "tables": {
+    "max_width_cm": 16,
+    "auto_fit": true,
+    "landscape_threshold_columns": 5
+  },
+  "header": {
+    "preserve_existing": true,
+    "exclude_cover": true
+  }
+}
