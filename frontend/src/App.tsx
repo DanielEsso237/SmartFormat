@@ -1,19 +1,22 @@
-import { useState } from 'react'
-import LandingPage from './pages/LandingPage'
-import UploadPage from './pages/UploadPage'
+import { useState, useCallback } from 'react';
+import type { AppState } from './types';
+import LandingPage from './pages/LandingPage';
+import WorkspacePage from './pages/WorkspacePage';
 
-function App() {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'upload'>('landing')
+const INITIAL: AppState = { step: 'landing' };
 
-  return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      {currentPage === 'landing' ? (
-        <LandingPage onStart={() => setCurrentPage('upload')} />
-      ) : (
-        <UploadPage onBack={() => setCurrentPage('landing')} />
-      )}
-    </div>
-  )
+export default function App() {
+  const [state, setState] = useState<AppState>(INITIAL);
+
+  const update = useCallback((patch: Partial<AppState>) => {
+    setState(prev => ({ ...prev, ...patch }));
+  }, []);
+
+  const reset = useCallback(() => setState(INITIAL), []);
+
+  if (state.step === 'landing') {
+    return <LandingPage onStart={() => update({ step: 'uploading' })} />;
+  }
+
+  return <WorkspacePage state={state} update={update} reset={reset} />;
 }
-
-export default App

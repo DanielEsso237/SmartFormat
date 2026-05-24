@@ -1,71 +1,38 @@
 {
   "pages": {
-    "memoire": {
-      "licence": { "min": 30, "max": 60 },
-      "master":  { "min": 60, "max": 100 }
-    },
+    "memoire":        { "licence": { "min": 30, "max": 60 }, "master": { "min": 60, "max": 100 } },
     "rapport_stage":  { "min": 30 },
     "rapport_projet": { "min": 20 },
     "expose":         { "min": 10 }
   },
-
   "plagiarism": {
     "threshold": 25,
     "attestation_required": true,
     "message": "Les mémoires présentant un taux de plagiat dépassant 25% seront refusés."
   },
-
   "citations": {
     "default_style": "elsevier",
     "supported_styles": ["elsevier", "springer", "vancouver"],
     "format": "author_date",
-    "multiple_authors": "et al.",
-    "note": "Le modèle retenu doit être celui de l'ensemble du document. Aucun mélange n'est admis."
+    "multiple_authors": "et al."
   },
-
   "toc": {
     "enabled": true,
     "title": "TABLE DES MATIÈRES",
-    "levels": 3,
-    "note": "Ne pas dépasser l'ordre 4 (I.1.1.4 maximum)"
+    "levels": 3
   },
-
-  "chapters": {
-    "intro_per_chapter": true,
-    "conclusion_per_chapter": true,
-    "note": "Facultatif selon les laboratoires et départements (Annexe 1 critères 8 et 9)"
-  },
-
   "numbering": {
     "sections": "roman_arabic",
     "example": "I.1, I.1.1, I.1.1.1",
     "max_depth": 4,
-    "tables_figures": "arabic_continuous",
-    "note": "Tableaux et figures numérotés en continu en chiffres arabes : 1, 2, 3..."
+    "tables_figures": "arabic_continuous"
   },
-
   "cover_colors": {
-    "BP":   "bleu",
-    "SBM":  "vert",
-    "TIC":  "blanc",
-    "SBAA": "marron",
-    "ROSE": "rouge",
-    "CA":   "orange",
-    "GE":   "gris",
-    "ER":   "beige",
-    "PA":   "violet"
+    "BP": "bleu", "SBM": "vert", "TIC": "blanc", "SBAA": "marron",
+    "ROSE": "rouge", "CA": "orange", "GE": "gris", "ER": "beige", "PA": "violet"
   },
-
   "soutenance": {
-    "licence": {
-      "duree_expose_min": 15,
-      "duree_questions_min": 30,
-      "duree_totale_min": 45
-    },
-    "master": {
-      "duree_expose_min": 20,
-      "duree_questions_min": 40,
-      "duree_totale_min": 60
-    }
+    "licence": { "duree_expose_min": 15, "duree_questions_min": 30, "duree_totale_min": 45 },
+    "master":  { "duree_expose_min": 20, "duree_questions_min": 40, "duree_totale_min": 60 }
   }
 }
