@@ -2,23 +2,8 @@
   "captions": {
     "auto_generate": true,
     "style": "Caption",
-    "numbering": {
-      "figures": "arabic_continuous",
-      "tables": "arabic_continuous"
-    },
-    "fallback": {
-      "figure": "Figure {N}",
-      "table": "Tableau {N}"
-    },
-    "generic_titles": [
-      "introduction", "conclusion", "résumé", "resume",
-      "abstract", "annexe", "annexes", "references",
-      "bibliographie", "références"
-    ],
-    "position": {
-      "figure": "below",
-      "table": "above"
-    }
+    "numbering": { "figures": "arabic_continuous", "tables": "arabic_continuous" },
+    "position": { "figure": "below", "table": "above" }
   },
   "images": {
     "max_width_cm": 14,
