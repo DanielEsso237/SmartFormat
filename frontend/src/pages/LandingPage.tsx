@@ -71,17 +71,20 @@ export default function LandingPage({ onStart }: Props) {
 
         <button className="btn btn--primary landing__cta" onClick={onStart}>
           Formater mon document
-          <span className="btn__arrow">→</span>
         </button>
 
         <div className="landing__features">
           {[
-            { icon: '🔍', title: 'Analyse intelligente', desc: 'Détecte automatiquement le type, la structure et la couverture' },
-            { icon: '📄', title: 'Cover automatique', desc: 'Génère ou conserve votre page de garde selon la charte' },
-            { icon: '⚡', title: 'Export instantané', desc: 'DOCX professionnel prêt en quelques secondes' },
+            { icon: 'search', title: 'Analyse intelligente', desc: 'Détecte automatiquement le type, la structure et la couverture' },
+            { icon: 'doc', title: 'Cover automatique', desc: 'Génère ou conserve votre page de garde selon la charte' },
+            { icon: 'zap', title: 'Export instantané', desc: 'DOCX professionnel prêt en quelques secondes' },
           ].map(f => (
             <div key={f.title} className="feature-card">
-              <div className="feature-card__icon">{f.icon}</div>
+              <div className="feature-card__icon">
+              {f.icon === 'search' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>}
+              {f.icon === 'doc' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+              {f.icon === 'zap' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>}
+            </div>
               <div className="feature-card__title">{f.title}</div>
               <div className="feature-card__desc">{f.desc}</div>
             </div>
@@ -216,9 +219,8 @@ export default function LandingPage({ onStart }: Props) {
           font-size: 0.9rem;
         }
         .btn--outline:hover { border-color: #60a5fa; color: #60a5fa; }
-        .btn__arrow { font-size: 1.1rem; transition: transform 0.2s; }
-        .btn--primary:hover .btn__arrow { transform: translateX(4px); }
+        .btn--primary:hover
       `}</style>
     </div>
   );
-}
+}  

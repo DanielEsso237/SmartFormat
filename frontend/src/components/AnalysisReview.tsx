@@ -1,6 +1,25 @@
 import type { DocumentAnalysis, FormDefinition } from '../types';
 import { DOC_TYPE_LABELS } from '../types';
 
+const CheckIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+);
+const AlertIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+);
+const XIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+);
+const FileIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+);
+const EditIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+);
+const ZapIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+);
+
 interface Props {
   analysis: DocumentAnalysis;
   formDefinition?: FormDefinition;
@@ -9,34 +28,19 @@ interface Props {
   onShowForm: () => void;
 }
 
-export default function AnalysisReview({
-  analysis,
-  formDefinition,
-  serverMessage,
-  onUseExtracted,
-  onShowForm,
-}: Props) {
+export default function AnalysisReview({ analysis, formDefinition, serverMessage, onUseExtracted, onShowForm }: Props) {
   const { cover_info, document_type, title, sections } = analysis;
 
-  const coverStatus = cover_info.cover_complete
-    ? 'complete'
-    : cover_info.cover_partial
-    ? 'partial'
-    : 'missing';
-
-  const hasExtracted = Object.values(cover_info.extracted_data).some(
-    v => v && (typeof v === 'string' ? v.trim() : true)
-  );
+  const coverStatus = cover_info.cover_complete ? 'complete' : cover_info.cover_partial ? 'partial' : 'missing';
+  const hasExtracted = Object.values(cover_info.extracted_data).some(v => v && (typeof v === 'string' ? v.trim() : true));
 
   return (
     <div className="review">
-      {/* Header */}
       <div className="review__header">
         <h2 className="review__title">Analyse terminée</h2>
         {serverMessage && <p className="review__msg">{serverMessage}</p>}
       </div>
 
-      {/* Doc type + title */}
       <div className="review__card">
         <div className="review__card-row">
           <span className="review__label">Type détecté</span>
@@ -51,14 +55,15 @@ export default function AnalysisReview({
         <div className="review__card-row">
           <span className="review__label">Page de garde</span>
           <span className={`tag tag--${coverStatus === 'complete' ? 'green' : coverStatus === 'partial' ? 'yellow' : 'red'}`}>
-            {coverStatus === 'complete' ? '✓ Détectée et complète'
-              : coverStatus === 'partial' ? '~ Partielle'
-              : '✗ Absente'}
+            {coverStatus === 'complete'
+              ? <><CheckIcon /> Détectée et complète</>
+              : coverStatus === 'partial'
+              ? <><AlertIcon /> Partielle</>
+              : <><XIcon /> Absente</>}
           </span>
         </div>
       </div>
 
-      {/* Extracted data preview */}
       {hasExtracted && (
         <div className="review__card">
           <p className="review__section-title">Informations extraites</p>
@@ -69,11 +74,7 @@ export default function AnalysisReview({
               return (
                 <div key={k} className="extracted-row">
                   <span className="extracted-row__key">{k}</span>
-                  <span className="extracted-row__val">
-                    {Array.isArray(v)
-                      ? `${v.length} membre(s)`
-                      : String(v).slice(0, 60)}
-                  </span>
+                  <span className="extracted-row__val">{Array.isArray(v) ? `${v.length} membre(s)` : String(v).slice(0, 60)}</span>
                 </div>
               );
             })}
@@ -81,110 +82,75 @@ export default function AnalysisReview({
         </div>
       )}
 
-      {/* Sections detected */}
       {sections.length > 0 && (
         <div className="review__card">
           <p className="review__section-title">Structure détectée ({sections.length} sections)</p>
           <ul className="review__sections">
             {sections.slice(0, 8).map((s, i) => (
               <li key={i} style={{ paddingLeft: `${(s.level - 1) * 1}rem` }}>
+                <span className="sec-icon"><FileIcon /></span>
                 <span className="sec-level">H{s.level}</span>
                 <span className="sec-title">{s.title}</span>
               </li>
             ))}
-            {sections.length > 8 && (
-              <li className="sec-more">+{sections.length - 8} autres sections…</li>
-            )}
+            {sections.length > 8 && <li className="sec-more">+{sections.length - 8} autres sections</li>}
           </ul>
         </div>
       )}
 
-      {/* Missing fields */}
       {cover_info.missing_fields.length > 0 && (
         <div className="review__card review__card--warn">
           <p className="review__section-title">Informations manquantes</p>
           <div className="missing-tags">
-            {cover_info.missing_fields.map(f => (
-              <span key={f} className="tag tag--red">{f}</span>
-            ))}
+            {cover_info.missing_fields.map(f => <span key={f} className="tag tag--red">{f}</span>)}
           </div>
         </div>
       )}
 
-      {/* Actions */}
       <div className="review__actions">
         {cover_info.cover_complete ? (
           <>
-            <button className="btn btn--primary" onClick={onUseExtracted}>
-              ⚡ Formater maintenant
-            </button>
-            <button className="btn btn--outline" onClick={onShowForm}>
-              Modifier les informations
-            </button>
+            <button className="btn btn--primary" onClick={onUseExtracted}><ZapIcon /> Formater maintenant</button>
+            <button className="btn btn--outline" onClick={onShowForm}><EditIcon /> Modifier les informations</button>
           </>
         ) : hasExtracted ? (
           <>
-            <button className="btn btn--primary" onClick={onShowForm}>
-              {formDefinition ? '📝 Compléter le formulaire' : 'Continuer'}
-            </button>
-            <button className="btn btn--outline" onClick={onUseExtracted}>
-              Utiliser les infos extraites telles quelles
-            </button>
+            <button className="btn btn--primary" onClick={onShowForm}><EditIcon /> {formDefinition ? 'Compléter le formulaire' : 'Continuer'}</button>
+            <button className="btn btn--outline" onClick={onUseExtracted}><ZapIcon /> Utiliser les infos extraites telles quelles</button>
           </>
         ) : (
-          <button className="btn btn--primary" onClick={onShowForm}>
-            📝 Remplir le formulaire
-          </button>
+          <button className="btn btn--primary" onClick={onShowForm}><EditIcon /> Remplir le formulaire</button>
         )}
       </div>
 
       <style>{`
         .review { display: flex; flex-direction: column; gap: 1.25rem; }
-        .review__header {}
         .review__title { font-size: 1.35rem; font-weight: 700; color: #e6edf3; margin: 0 0 0.4rem; font-family: Georgia, serif; }
         .review__msg { font-size: 0.85rem; color: #8b949e; margin: 0; }
-        .review__card {
-          background: #161b22;
-          border: 1px solid #21262d;
-          border-radius: 10px;
-          padding: 1rem 1.25rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.6rem;
-        }
+        .review__card { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
         .review__card--warn { border-color: rgba(234,179,8,0.25); background: rgba(234,179,8,0.04); }
         .review__card-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
         .review__label { font-size: 0.82rem; color: #8b949e; }
         .review__value { font-size: 0.85rem; color: #c9d1d9; max-width: 55%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-        .review__section-title { font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 0.5rem; }
+        .review__section-title { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 0.5rem; }
         .review__extracted { display: flex; flex-direction: column; gap: 0.3rem; }
-        .extracted-row { display: flex; gap: 0.75rem; align-items: flex-start; }
+        .extracted-row { display: flex; gap: 0.75rem; }
         .extracted-row__key { font-size: 0.78rem; color: #8b949e; font-family: monospace; min-width: 120px; }
         .extracted-row__val { font-size: 0.82rem; color: #c9d1d9; }
         .review__sections { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
-        .review__sections li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
-        .sec-level { font-family: monospace; font-size: 0.7rem; color: #58a6ff; background: rgba(88,166,255,0.1); padding: 1px 5px; border-radius: 4px; }
+        .review__sections li { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; }
+        .sec-icon { color: #484f58; display: flex; }
+        .sec-level { font-family: monospace; font-size: 0.68rem; color: #58a6ff; background: rgba(88,166,255,0.1); padding: 1px 5px; border-radius: 4px; }
         .sec-title { color: #8b949e; }
-        .sec-more { color: #484f58; font-size: 0.78rem; font-style: italic; }
+        .sec-more { color: #484f58; font-size: 0.78rem; font-style: italic; padding-left: 1.5rem; }
         .missing-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
         .review__actions { display: flex; flex-direction: column; gap: 0.6rem; }
-
-        .tag {
-          font-size: 0.75rem; border-radius: 20px;
-          padding: 0.2rem 0.7rem; font-weight: 500;
-          display: inline-block;
-        }
-        .tag--blue   { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
-        .tag--green  { background: rgba(34,197,94,0.12);  color: #86efac; border: 1px solid rgba(34,197,94,0.25); }
-        .tag--yellow { background: rgba(234,179,8,0.12);  color: #fde68a; border: 1px solid rgba(234,179,8,0.25); }
-        .tag--red    { background: rgba(239,68,68,0.12);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
-
-        .btn {
-          display: inline-flex; align-items: center; gap: 0.5rem;
-          border-radius: 8px; font-weight: 500; cursor: pointer;
-          transition: all 0.2s; border: none; outline: none;
-          font-size: 0.9rem; font-family: system-ui;
-        }
+        .tag { font-size: 0.75rem; border-radius: 20px; padding: 0.2rem 0.7rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .tag--blue   { background: rgba(59,130,246,0.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+        .tag--green  { background: rgba(34,197,94,0.12);   color: #86efac; border: 1px solid rgba(34,197,94,0.25); }
+        .tag--yellow { background: rgba(234,179,8,0.12);   color: #fde68a; border: 1px solid rgba(234,179,8,0.25); }
+        .tag--red    { background: rgba(239,68,68,0.12);   color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; outline: none; font-size: 0.9rem; font-family: system-ui; }
         .btn--primary { background: linear-gradient(135deg,#2563eb,#0891b2); color: white; padding: 0.7rem 1.5rem; }
         .btn--primary:hover { filter: brightness(1.1); }
         .btn--outline { background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 0.65rem 1.4rem; }
