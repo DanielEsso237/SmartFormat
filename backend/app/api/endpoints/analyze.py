@@ -24,18 +24,9 @@ def get_analysis(session_id: str):
         form_raw = FORMS.get(analysis.document_type)
         if form_raw:
             fields = [FormField(**f) for f in form_raw["fields"]]
-            form_def = FormDefinition(
-                doc_type=analysis.document_type,
-                title=form_raw["title"],
-                fields=fields
-            )
+            form_def = FormDefinition(doc_type=analysis.document_type, title=form_raw["title"], fields=fields)
 
-    return AnalyzeResponse(
-        session_id=session_id,
-        analysis=analysis,
-        form_definition=form_def,
-        message="Analyse disponible",
-    )
+    return AnalyzeResponse(session_id=session_id, analysis=analysis, form_definition=form_def, message="Analyse disponible")
 
 
 @router.post("/format", response_model=FormatResponse)
@@ -74,6 +65,7 @@ async def format_doc(req: FormatRequest):
             form_data=cover_data,
             original_text=original_text,
             output_path=output_path,
+            source_path=file_path,
         )
     except Exception as e:
         raise HTTPException(500, f"Erreur lors du formatage : {e}")

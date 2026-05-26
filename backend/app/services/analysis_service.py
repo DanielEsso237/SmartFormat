@@ -1,10 +1,3 @@
-"""
-Service d'analyse IA du document uploadé.
-Étapes :
-1. Extraction du texte (PDF ou DOCX)
-2. Analyse via Groq (type, cover, sections)
-3. Retour d'une DocumentAnalysis structurée
-"""
 import json
 import re
 from pathlib import Path
