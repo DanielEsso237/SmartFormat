@@ -27,16 +27,43 @@ TOC_FIELD_RE  = re.compile(r'\bTOC\b')
 HEADING_SCORE_THRESHOLD = 4
 
 COVER_STOP_RE = re.compile(
-    r'^(introduction|résumé|resume|abstract|remerciements?|dédicace|dedicace'
-    r'|sommaire|table\s+des\s+mati|i[\-\.\s]|ii[\-\.\s]|iii[\-\.\s]'
+    r'^(introduction|r[eé]sum[eé]|abstract|remerciements?|d[eé]dicace'
+    r'|sommaire|table\s+des\s+mati'
+    r'|i[\-\.\s]|ii[\-\.\s]|iii[\-\.\s]'
     r'|chapitre\s+\d|partie\s+\d)',
     re.IGNORECASE
 )
 
 HEADING_FALSE_POSITIVE_RE = re.compile(
-    r'(comprend|suivants?|notamment|ainsi que|dont|suivante|:$|\.\s*$)',
+    r'(comprend|suivants?|notamment|ainsi\s+que|dont|suivante|:$|\.\s*$)',
     re.IGNORECASE
 )
+
+PRELIM_SECTIONS = [
+    ('dedicace',      re.compile(r'^d[eé]dicace',               re.I)),
+    ('remerciements', re.compile(r'^remerciements?',            re.I)),
+    ('resume',        re.compile(r'^r[eé]sum[eé]',              re.I)),
+    ('abstract',      re.compile(r'^abstract',                  re.I)),
+    ('sommaire',      re.compile(r'^(sommaire|table\s+des\s+mati)', re.I)),
+    ('introduction',  re.compile(r'^introduction',              re.I)),
+]
+
+PRELIM_LABELS = {
+    'dedicace':      'DÉDICACE',
+    'remerciements': 'REMERCIEMENTS',
+    'resume':        'RÉSUMÉ',
+    'abstract':      'ABSTRACT',
+    'sommaire':      'TABLE DES MATIÈRES',
+    'introduction':  'INTRODUCTION',
+}
+
+REQUIRED_PRELIMS = {
+    'memoire':        ['dedicace','remerciements','resume','abstract','sommaire','introduction'],
+    'rapport_stage':  ['dedicace','remerciements','resume','abstract','sommaire','introduction'],
+    'rapport_projet': ['dedicace','remerciements','resume','abstract','sommaire','introduction'],
+    'expose':         ['sommaire','introduction'],
+    'demande':        [],
+}
 
 
 def _set_margins(section, cm=MARGIN_CM):
@@ -56,25 +83,14 @@ def _apply_base_style(doc):
     s.paragraph_format.space_before      = Pt(0)
 
 
-def _run(para, text, size=FONT_BODY, bold=False, italic=False, color=None):
-    r = para.add_run(text)
-    r.font.name   = FONT_NAME
-    r.font.size   = Pt(size)
-    r.font.bold   = bold
-    r.font.italic = italic
-    if color:
-        r.font.color.rgb = RGBColor(*color)
-    return r
-
-
 def _para(doc, text="", size=FONT_BODY, bold=False, italic=False,
           align="justify", space_before=0, space_after=6,
           color=None, keep_with_next=False):
     p = doc.add_paragraph()
-    p.paragraph_format.space_before    = Pt(space_before)
-    p.paragraph_format.space_after     = Pt(space_after)
-    p.paragraph_format.line_spacing    = LINE_SPACING
-    p.paragraph_format.keep_with_next  = keep_with_next
+    p.paragraph_format.space_before   = Pt(space_before)
+    p.paragraph_format.space_after    = Pt(space_after)
+    p.paragraph_format.line_spacing   = LINE_SPACING
+    p.paragraph_format.keep_with_next = keep_with_next
     p.alignment = {
         "left":    WD_ALIGN_PARAGRAPH.LEFT,
         "center":  WD_ALIGN_PARAGRAPH.CENTER,
@@ -82,7 +98,13 @@ def _para(doc, text="", size=FONT_BODY, bold=False, italic=False,
         "justify": WD_ALIGN_PARAGRAPH.JUSTIFY,
     }.get(align, WD_ALIGN_PARAGRAPH.JUSTIFY)
     if text:
-        _run(p, text, size=size, bold=bold, italic=italic, color=color)
+        r = p.add_run(text)
+        r.font.name   = FONT_NAME
+        r.font.size   = Pt(size)
+        r.font.bold   = bold
+        r.font.italic = italic
+        if color:
+            r.font.color.rgb = RGBColor(*color)
     return p
 
 
@@ -104,7 +126,6 @@ def _is_heading(para) -> tuple[bool, int]:
     text = para.text.strip()
     if not text or len(text) < 2 or len(text) > 150:
         return False, 0
-
     if HEADING_FALSE_POSITIVE_RE.search(text):
         return False, 0
 
@@ -156,6 +177,49 @@ def _detect_cover_end(paragraphs) -> int:
             if not is_h:
                 return i
     return min(8, len(paragraphs))
+
+
+def _scan_present_sections(paragraphs, cover_end) -> dict[str, list]:
+    """
+    Parcourt le source depuis cover_end.
+    Retourne un dict: clé_section → [paragraphes (text) du contenu de cette section]
+    La clé 'body' contient tout ce qui est hors sections préliminaires.
+    """
+    result = {k: [] for k, _ in PRELIM_SECTIONS}
+    result['body'] = []
+
+    current_section = None
+    prelim_keys = [k for k, _ in PRELIM_SECTIONS]
+
+    for i, p in enumerate(paragraphs):
+        if i < cover_end:
+            continue
+        text = p.text.strip()
+        if not text:
+            continue
+
+        matched = None
+        for key, pat in PRELIM_SECTIONS:
+            if pat.match(text):
+                matched = key
+                break
+
+        if matched:
+            current_section = matched
+            continue
+
+        if current_section and current_section in prelim_keys:
+            is_h, _ = _is_heading(p)
+            if is_h:
+                current_section = 'body'
+            else:
+                result[current_section].append(p)
+                continue
+
+        current_section = 'body'
+        result['body'].append(p)
+
+    return result
 
 
 def _extract_toc(source_path: Path) -> dict:
@@ -210,6 +274,70 @@ def _extract_toc(source_path: Path) -> dict:
 def _insert_toc(doc, toc):
     for el in toc['elements']:
         doc.element.body.append(el)
+
+
+def _write_section_content(doc, paragraphs):
+    """Écrit une liste de paragraphes source avec la charte appliquée."""
+    for p in paragraphs:
+        text = p.text.strip()
+        if not text:
+            continue
+        if re.match(r'^[-•–]\s+', text):
+            body_p = doc.add_paragraph(style="List Bullet")
+            body_p.paragraph_format.line_spacing = LINE_SPACING
+            body_p.paragraph_format.space_after  = Pt(4)
+            r = body_p.add_run(re.sub(r'^[-•–]\s+', '', text))
+            r.font.name = FONT_NAME
+            r.font.size = Pt(FONT_BODY)
+        else:
+            _para(doc, text, size=FONT_BODY, align="justify",
+                  space_before=0, space_after=6)
+
+
+def _write_prelim_section(doc, key, content_paras, toc, doc_type):
+    """
+    Écrit une section préliminaire sur sa propre page.
+    Si content_paras est vide → [À rédiger].
+    Si c'est le sommaire → inject TOC ou placeholder Word.
+    """
+    label = PRELIM_LABELS[key]
+    _heading(doc, label, level=1)
+
+    if key == 'sommaire':
+        if toc['type']:
+            _insert_toc(doc, toc)
+        else:
+            _para(doc,
+                "[La table des matières sera générée automatiquement par Word : "
+                "Références → Table des matières]",
+                size=FONT_BODY, italic=True, align="left")
+    elif content_paras:
+        _write_section_content(doc, content_paras)
+    else:
+        _para(doc, "[À rédiger]", size=FONT_BODY, italic=True, align="justify")
+
+    _page_break(doc)
+
+
+def _write_body_section(doc, paragraphs):
+    """Écrit le corps principal du document."""
+    for p in paragraphs:
+        text = p.text.strip()
+        if not text:
+            continue
+        is_h, level = _is_heading(p)
+        if is_h:
+            _heading(doc, text, level=level)
+        elif re.match(r'^[-•–]\s+', text):
+            body_p = doc.add_paragraph(style="List Bullet")
+            body_p.paragraph_format.line_spacing = LINE_SPACING
+            body_p.paragraph_format.space_after  = Pt(4)
+            r = body_p.add_run(re.sub(r'^[-•–]\s+', '', text))
+            r.font.name = FONT_NAME
+            r.font.size = Pt(FONT_BODY)
+        else:
+            _para(doc, text, size=FONT_BODY, align="justify",
+                  space_before=0, space_after=6)
 
 
 def _cover_memoire(doc, data):
@@ -354,70 +482,6 @@ def _build_cover(doc, form_data, doc_type):
     COVER_BUILDERS.get(doc_type, _cover_expose)(doc, form_data)
 
 
-def _reformat_body(doc, source_path: Path, toc: dict):
-    """
-    Relit chaque paragraphe du document source depuis la fin de la couverture.
-    - Copie le contenu tel quel en appliquant la charte (police, taille, interligne, justification)
-    - Insère le TOC quand on détecte sommaire/table des matières
-    - N'insère JAMAIS de placeholder si le contenu existe
-    - keep_with_next sur tous les titres
-    """
-    src   = Document(source_path)
-    paras = src.paragraphs
-    cover_end = _detect_cover_end(paras)
-
-    toc_inserted = False
-
-    for i, p in enumerate(paras):
-        if i < cover_end:
-            continue
-
-        text = p.text.strip()
-        if not text:
-            continue
-
-        style_name = (p.style.name or "").lower()
-
-        if 'toc' in style_name or 'sommaire' in style_name.lower():
-            if not toc_inserted:
-                if toc['type']:
-                    _insert_toc(doc, toc)
-                toc_inserted = True
-            continue
-
-        is_toc_keyword = bool(re.match(
-            r'^(sommaire|table\s+des\s+mati)', text, re.IGNORECASE
-        ))
-        if is_toc_keyword and not toc_inserted:
-            _heading(doc, text, level=1)
-            if toc['type']:
-                _insert_toc(doc, toc)
-            else:
-                _para(doc,
-                    "[La table des matières sera générée automatiquement par Word : "
-                    "Références → Table des matières]",
-                    size=FONT_BODY, italic=True, align="left")
-            toc_inserted = True
-            _page_break(doc)
-            continue
-
-        is_h, level = _is_heading(p)
-
-        if is_h:
-            _heading(doc, text, level=level)
-        else:
-            if re.match(r'^[-•–]\s+', text):
-                body_p = doc.add_paragraph(style="List Bullet")
-                body_p.paragraph_format.line_spacing = LINE_SPACING
-                body_p.paragraph_format.space_after  = Pt(4)
-                r = body_p.add_run(re.sub(r'^[-•–]\s+', '', text))
-                r.font.name = FONT_NAME
-                r.font.size = Pt(FONT_BODY)
-            else:
-                _para(doc, text, size=FONT_BODY, align="justify",
-                      space_before=0, space_after=6)
-
-
 def format_document(
     analysis: DocumentAnalysis,
     form_data: dict[str, Any],
@@ -443,9 +507,18 @@ def format_document(
     toc = _extract_toc(source_path) if source_path else {'type': None, 'elements': []}
 
     if source_path and source_path.exists():
-        _reformat_body(doc, source_path, toc)
+        src_doc   = Document(source_path)
+        cover_end = _detect_cover_end(src_doc.paragraphs)
+        sections  = _scan_present_sections(src_doc.paragraphs, cover_end)
     else:
-        _para(doc, "[Contenu non disponible]", italic=True)
+        sections = {k: [] for k, _ in PRELIM_SECTIONS}
+        sections['body'] = []
+
+    required = REQUIRED_PRELIMS.get(doc_type, [])
+    for key in required:
+        _write_prelim_section(doc, key, sections.get(key, []), toc, doc_type)
+
+    _write_body_section(doc, sections.get('body', []))
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     doc.save(output_path)
